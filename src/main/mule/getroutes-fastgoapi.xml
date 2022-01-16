@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getroutes-fastgoapiFlow" doc:id="d44028c5-45d2-475c-ad6e-c31bc6dbd7e0" >
+		<choice doc:name="Choice" doc:id="8d60ee48-031d-4846-8b02-2ef7bae1609a" >
+			<when expression='#[attributes.uriParams.transportType == "land"]'>
+				<db:select doc:name="land" doc:id="57b12350-3e68-45be-af5a-671e7755c132" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from fastgo.land;]]></db:sql>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="02a2edfb-effc-4b98-9ce5-043460cbc871" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	"originLocation": {
+		"locationCode": $.departureLocationCode,
+		
+	},
+	"destinationLoc": {
+		"locationCode": $.destinationLocationCode,
+		}
+		}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[attributes.uriParams.transportType == "air"]'>
+				<db:select doc:name="Select" doc:id="c21110ec-d66d-4bd0-b2b6-b9cea70d8d17" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from fastgo.air;]]></db:sql>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="17342220-6ce4-4bc5-9aa9-d88768836b97" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	"originLocation": {
+		"locationCode": $.departureLocationCode,
+		
+	},
+	"destinationLoc": {
+		"locationCode": $.destinationLocationCode,
+		
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[attributes.uriParams.transportType == "sea"]'>
+				<db:select doc:name="Sea" doc:id="f4d76536-af82-46c0-9141-5700ceaa8bf8" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from fastgo.sea;]]></db:sql>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="6e7ca2e9-dfec-4edc-9948-220a20f5579d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map {
+	"originLocation": {
+		"locationCode": $.departureLocationCode,
+		
+	},
+	"destinationLoc": {
+		"locationCode": $.destinationLocationCode,
+		
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="a32803a7-f233-4a9e-a333-eff7453c91f7" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Message" : "Does not exist"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

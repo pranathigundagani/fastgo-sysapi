@@ -1,0 +1,35 @@
+#%RAML 1.0
+title: FastGo-sysapi
+/bookings:
+  uriParameters:
+  /{transportType}:
+   /{transportCompany}:
+    /routes:
+     get:
+      headers:
+       transcationId : 
+          type: string
+          required: true   
+      responses:
+       200:
+        body:
+          application/json:
+              example: !include responses/getroutesfastgo.json              
+    /schedules:
+     get:
+      headers:
+       transcationId : 
+          type: string
+          required: true
+      queryParameters:
+        departureLocationCode:
+         type: string
+         required: false      
+        destinationLocationCode:
+         type: string
+         required: false
+      responses:
+       200:
+        body:
+          application/json:
+            example: !include responses/getschedulesfastgo.json

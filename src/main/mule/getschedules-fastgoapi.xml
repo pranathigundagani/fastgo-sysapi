@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getschedules-fastgoapiFlow" doc:id="4a3a6ab8-4159-48e8-bfef-90d45cdbc970" >
+		<set-variable value="#[attributes.queryParams.destinationLocation]" doc:name="Set Variable" doc:id="cdc22b40-542a-4689-be45-fc1e24990ca0" variableName="destination"/>
+		<set-variable value="#[attributes.queryParams.departureLocation]" doc:name="Set Variable-departure" doc:id="f77387a7-efc4-439b-84af-4b152c2db4ff" variableName="departure"/>
+		<choice doc:name="Choice" doc:id="209c1b4b-d5f9-4c47-8a78-364a5566fd08" >
+			<when expression='#[attributes.uriParams.transportType == "land"]'>
+				<db:select doc:name="Select - land" doc:id="f67469c3-1515-428d-a39d-b36d03714ff8" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from fastgo.land where departureLocationCode=:departureLocationCode and destinationLocationCode=:destinationLocationCode]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"departureLocationCode": attributes.queryParams.departureLocation,
+	"destinationLocationCode": attributes.queryParams.destinationLocation
+}]]]></db:input-parameters>
+				</db:select>
+				<choice doc:name="Choice" doc:id="b05c0341-99c7-4456-8b89-ceff90ee0664" >
+					<when expression="#[vars.destinationLocation !=null and vars.departureLocation !=null]">
+						<choice doc:name="Choice" doc:id="a9ab2ca9-5694-49d8-aa9c-fc7b7cc77d56" >
+							<when expression="#[isEmpty(payload)]">
+								<ee:transform doc:name="Transform Message" doc:id="ef8d7f4b-d504-4b4d-bd13-67fb55090869" >
+									<ee:message >
+										<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "routes are not available"
+}]]></ee:set-payload>
+									</ee:message>
+								</ee:transform>
+							</when>
+							<otherwise >
+								<ee:transform doc:name="Transform Message" doc:id="650de69d-4c88-460e-a827-bbf47fdee07b" >
+									<ee:message >
+										<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+	"avaiableSeats": $.availableSeats,
+	"depatureTime": $.depatureTime,
+	"travelRoute": {
+		"destinationlocation": {
+			"locationcode": $.destinationLocationCode
+		},
+		"originlocation": {
+			"locationcode": $.departureLocationCode
+		}
+	}
+}
+	  
+]]></ee:set-payload>
+									</ee:message>
+								</ee:transform>
+							</otherwise>
+						</choice>
+					</when>
+					<otherwise >
+						<ee:transform doc:name="Transform Message" doc:id="cba5ab0e-1373-4170-b9d9-d3c477067a06" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message : "no data found for landways"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
+			</when>
+			<when expression='#[attributes.uriParams.transportType == "air"]'>
+				<db:select doc:name="Select-air" doc:id="6c6e4662-eead-4a95-9146-9524225d8b6d" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from fastgo.air where departureLocationCode=:departureLocationCode and destinationLocationCode=:destinationLocationCode]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"departureLocationCode": attributes.queryParams.departureLocation,
+	"destinationLocationCode": attributes.queryParams.destinationLocation
+}]]]></db:input-parameters>
+				</db:select>
+				<choice doc:name="Choice" doc:id="ce595f14-8db6-4d34-9232-124ddd1b320f" >
+					<when expression="#[vars.destinationLocation !=null and vars.departureLocation !=null]">
+						<choice doc:name="Choice" doc:id="0c7e2e51-e7e5-4572-9850-a42b5b086f3f" >
+							<when expression="#[isEmpty(payload)]">
+								<ee:transform doc:name="Transform Message" doc:id="7396cd41-4f5f-46cd-aa87-3ef50bf3ce02" >
+									<ee:message >
+										<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "routes are not available"
+}]]></ee:set-payload>
+									</ee:message>
+								</ee:transform>
+							</when>
+							<otherwise >
+								<ee:transform doc:name="Transform Message" doc:id="d59b9206-86ba-47b4-9d59-4e2780e5d0db" >
+									<ee:message >
+										<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+	"avaiableSeats": $.availableSeats,
+	"depatureTime": $.depatureTime,
+	"travelRoute": {
+		"destinationlocation": {
+			"locationcode": $.destinationLocationCode
+		},
+		"originlocation": {
+			"locationcode": $.departureLocationCode
+		}
+	}
+}
+	  
+]]></ee:set-payload>
+									</ee:message>
+								</ee:transform>
+							</otherwise>
+						</choice>
+					</when>
+					<otherwise >
+						<ee:transform doc:name="Transform Message" doc:id="1d097bb3-0b74-4991-9210-c3426b82cb53" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message : "no data found for airways"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
+			</when>
+			<when expression='#[attributes.uriParams.transportType == "sea"]'>
+				<db:select doc:name="Select" doc:id="7552af95-ee7e-4b72-bb80-582fbc93dcca" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from fastgo.sea where departureLocationCode=:departureLocationCode and destinationLocationCode=:destinationLocationCode]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	"departureLocationCode": attributes.queryParams.departureLocation,
+	"destinationLocationCode": attributes.queryParams.destinationLocation
+}]]]></db:input-parameters>
+				</db:select>
+				<choice doc:name="Choice" doc:id="2091266a-397c-4e65-bbde-b60eec270c35" >
+					<when expression="#[vars.destinationLocation !=null and vars.departureLocation !=null]">
+						<choice doc:name="Choice" doc:id="683baf91-69bc-424a-844d-e2efc605d143" >
+							<when expression="#[isEmpty(payload)]">
+								<ee:transform doc:name="Transform Message" doc:id="a9920e97-3119-4078-a73d-c1ad101b3b5c" >
+									<ee:message >
+										<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "routes are not available"
+}]]></ee:set-payload>
+									</ee:message>
+								</ee:transform>
+							</when>
+							<otherwise >
+								<ee:transform doc:name="Transform Message" doc:id="d0d61f33-4cd7-4b70-ac29-33039c885950" >
+									<ee:message >
+										<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map{
+	"avaiableSeats": $.availableSeats,
+	"depatureTime": $.depatureTime,
+	"travelRoute": {
+		"destinationlocation": {
+			"locationcode": $.destinationLocationCode
+		},
+		"originlocation": {
+			"locationcode": $.departureLocationCode
+		}
+	}
+}
+	  
+]]></ee:set-payload>
+									</ee:message>
+								</ee:transform>
+							</otherwise>
+						</choice>
+					</when>
+					<otherwise >
+						<ee:transform doc:name="Transform Message" doc:id="bb95f9f5-34db-417c-b8ee-ee8500b3150c" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message : "no data found for seaways"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="5d03e4a4-4c16-4a63-b45a-396edd26a16a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "No data found"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
